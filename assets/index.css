@@ -1,17 +1,90 @@
+@font-face {
+    font-family: "Clash";
+    src: url(./ClashDisplay-Regular.otf) format("opentype");
+}
+
 body {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-  background-color: #444;
+    margin: 0;
+    padding: 0;
+    font-family: 'Clash', sans-serif;
+    background-color: #7c7c7c;
+}
+
+main {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: flex;
+}
+
+.keys {
+    z-index: 100;
+    position: absolute;
+    width: 580px;
+    height: 580px;
+    left: 50%;
+    top: 50%;
+    border-radius: 50%;
+    overflow: hidden;
+    transform: translate(-50%, -50%);
+}
+
+.keys button:active {
+    background-color: rgb(7, 7, 7);
+}
+
+.keys button {
+    position: absolute;
+    width: 154px;
+    height: 290px;
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
+    background-color: rgb(41, 41, 41);
+    transform-origin: center bottom;
+    left: calc(50% - 80px);
+    display: flex;
+    color: #eee;
+    padding: 30px;
+    gap: 4px;
+    align-items:center;
+    justify-content:top;
+    font-size: 24px;
+    flex-direction: column;
+}
+
+.keys button p.sub {
+    font-size: 16px;
+    opacity: 0.7;
 }
 
 .display {
-    background-color: black;
-    width: 400px;
-    height: 400px;
+    background-color: rgb(33, 33, 33);
+    outline: 38px solid #000;
+    width: 300px;
+    height: 300px;
     border-radius: 50%;
     position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+}
 
+.display section {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    display: none;
+}
+
+section.active {
+    display: flex;
 }
 
 .content {
@@ -36,7 +109,7 @@ canvas {
     pointer-events: none !important;
 }
 
-#example1 {
+.curve-text {
     line-height: 1;
     position: absolute;
     top: 0;
@@ -44,4 +117,52 @@ canvas {
     font-size: 24px;
     transform-origin: left top;
     transform: rotate(0deg) translateX(-50%);
+    text-wrap: nowrap;
+    white-space: nowrap;
+    color: #ffbf00;
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+button.play {
+    width: 110px;
+    height: 110px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 38px;
+    position: relative;
+    color: black;
+}
+
+button.play .background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    width: 110px;
+    height: 110px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 37px;
+    animation: rotate 24s linear infinite;
+    background-color: #ffbf00;
+    z-index: 0;
+}
+
+button.play p {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }

@@ -5,39 +5,133 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="./assets/jquery.arctext.js"></script>
     <link rel="stylesheet" href="./assets/reset.css">
     <link rel="stylesheet" href="./assets/index.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <title></title>
 </head>
 
 <body>
-    <div class="display">
-        <div class="content">
-            <div id="example1">Pla54y</div>
+    <main>
+        <div class="keys">
+
         </div>
-    </div>
+        <div class="display">
+            <div class="content">
+                <section class="menu">
+                    <button class="play">
+                        <div class="background"></div>
+                        <p>Play</p>
+                    </button>
+                </section>
+                <section class="play">
+
+                </section>
+            </div>
+        </div>
+    </main>
     <script>
+        monoSynth = new Tone.PolySynth().toDestination();
+        function setup() {
+
+        }
+
+        let mejour_key_array = ["C", "G", "D", "A", "E", "B", "F♯", "Cb", "Gb", "Db", "Ab", "Eb"]
+        let mejour_key_tones = ["C", "G", "D", "A", "E", "B", "F#", "B", "F#", "C#", "G#", "D#"]
+        let minor_key_array = ["A", "E", "B", "F♯", "C♯", "G♯", "D♯", "Ab", "Eb", "Bb", "F", "C"]
+        let now_keys = []
+        let key_positions = []
+
+        for (let i = 0; i < 12; i++) {
+            key_positions.push({
+                x: Math.cos((i * 30 - 90) / (180 / Math.PI)) * 150 + 150,
+                y: Math.sin((i * 30 - 90) / (180 / Math.PI)) * 150 + 150
+            })
+        }
 
         function setup() {
-            const canvas = createCanvas(400, 400);
+            const canvas = createCanvas(300, 300);
             canvas.parent(document.querySelector('.display'));
         }
+
         function draw() {
-            circle((Math.sin(((dir) * 30) / (180 / Math.PI))) * 180 + 200, (Math.cos(((dir) * 30) / (180 / Math.PI))) * 180 + 200, 10);
+            clear();
+            now_keys.forEach((key, i) => {
+                now_keys.forEach((key, j) => {
+                    if (i != j) {
+                        stroke(255)
+                        strokeWeight(1)
+                        line(key_positions[now_keys[i]].x, key_positions[now_keys[i]].y, key_positions[now_keys[j]].x, key_positions[now_keys[j]].y)
+                    }
+                })
+            })
         }
-        function set_text_curve(dir) {
-            typo_height = $("#example1").height()
-            $("#example1").arctext({ radius: 197 - (typo_height / 2), dir: 1 })
-            $("#example1").css({
-                top: (Math.cos(((dir) * 30) / (180 / Math.PI))) * 180 + 200 + "px",
-                left: (Math.sin(((dir) * 30) / (180 / Math.PI))) * 180 + 200 + "px",
-                transform: `rotate(${-(dir * 30 - 180)}deg) translateX(-50%) translateY(-50%) `,
+
+        class Key {
+            constructor(key) {
+                this.key = key
+                this.now_keys = [0 + this.key, 1 + this.key, 4 + this.key]
+                this.now_keys.forEach((key, i) => {
+                    if (key > 11) {
+                        this.now_keys[i] = key - 12
+                    }
+                })
+                now_keys = this.now_keys
+            }
+            majour() {
+                monoSynth.triggerAttackRelease(this.now_keys.map((key) => {
+                    return mejour_key_tones[key] + "4"
+                }), "8n")
+            }
+            clear() {
+                now_keys = []
+            }
+        }
+
+        $(document).on("pointerdown", "button.key", function () {
+            new Key($("button.key").index(this)).majour()
+        })
+        $(document).on("pointerup", "button.key", function () {
+            new Key().clear()
+        })
+
+        function set_keys() {
+            for (let i = 0; i < 12; i++) {
+                let $key = $(`<button class="key"><p>${mejour_key_array[i]}</p><p class="sub">${minor_key_array[i]}<p></button>`).appendTo(".keys")
+            }
+            $("button.key").each(function (index) {
+                $(this).css({
+                    transform: `rotate(${(index * 30)}deg)`,
+                });
+            })
+        }
+
+        function set_section(name) {
+            $("section").removeClass("active")
+            $(`section.${name}`).addClass("active")
+        }
+
+        function set_text_curve(dir, content) {
+            let d = -(dir - 6)
+            let $typo = $(`<button class="curve-text">${content}</button>`).appendTo(".menu")
+            let typo_height = $typo.height()
+            $typo.arctext({ radius: 140 - (typo_height / 2), dir: 1 })
+            $typo.css({
+                top: Math.cos((d * 30) / (180 / Math.PI)) * (150 - typo_height) + 150 + "px",
+                left: Math.sin((d * 30) / (180 / Math.PI)) * (150 - typo_height) + 150 + "px",
+                transform: `rotate(${-(d * 30 - 180)}deg) translateX(-50%) translateY(-50%) `,
             });
         }
-        dir = 7
-        set_text_curve(dir)
+
+        set_keys()
+
+        set_text_curve(0, "Compose")
+        set_text_curve(3, "Saved")
+        set_text_curve(6, "Setting")
+        set_text_curve(9, "content")
     </script>
 </body>
 
