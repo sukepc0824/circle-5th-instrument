@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="./assets/jquery.arctext.js"></script>
+    <link rel="stylesheet" href="./assets/reset.css">
+    <link rel="stylesheet" href="./assets/index.css">
+    <title></title>
+</head>
+
+<body>
+    <div class="display">
+        <div class="content">
+            <div id="example1">Pla54y</div>
+        </div>
+    </div>
+    <script>
+
+        function setup() {
+            const canvas = createCanvas(400, 400);
+            canvas.parent(document.querySelector('.display'));
+        }
+        function draw() {
+            circle((Math.sin(((dir) * 30) / (180 / Math.PI))) * 180 + 200, (Math.cos(((dir) * 30) / (180 / Math.PI))) * 180 + 200, 10);
+        }
+        function set_text_curve(dir) {
+            typo_height = $("#example1").height()
+            $("#example1").arctext({ radius: 197 - (typo_height / 2), dir: 1 })
+            $("#example1").css({
+                top: (Math.cos(((dir) * 30) / (180 / Math.PI))) * 180 + 200 + "px",
+                left: (Math.sin(((dir) * 30) / (180 / Math.PI))) * 180 + 200 + "px",
+                transform: `rotate(${-(dir * 30 - 180)}deg) translateX(-50%) translateY(-50%) `,
+            });
+        }
+        dir = 7
+        set_text_curve(dir)
+    </script>
+</body>
+
+</html>
