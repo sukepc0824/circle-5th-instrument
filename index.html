@@ -11,14 +11,12 @@
     <link rel="stylesheet" href="./assets/reset.css">
     <link rel="stylesheet" href="./assets/index.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-    <title></title>
+    <title>Circle of Fifths Instrument</title>
 </head>
 
 <body>
     <main>
-        <div class="keys">
-
-        </div>
+        <div class="keys"></div>
         <div class="display">
             <div class="content">
                 <section class="menu">
@@ -27,111 +25,239 @@
                         <p>Play</p>
                     </button>
                 </section>
-                <section class="play">
-
-                </section>
+                <section class="play"></section>
             </div>
         </div>
     </main>
-    <script>
-        monoSynth = new Tone.PolySynth().toDestination();
-        function setup() {
 
+    <script>
+        // Tone.js PolySynth setup
+        let monoSynth = new Tone.PolySynth();
+        let analyser = new Tone.Analyser("waveform", 1024);
+        monoSynth.connect(analyser);
+        analyser.toDestination();
+
+        // Key arrays and positions
+        const mejour_key_array = ["C", "G", "D", "A", "E", "B", "F#", "Db", "Ab", "Eb", "Bb", "F"];
+        const mejour_key_tones = ["C", "G", "D", "A", "E", "B", "F#", "C#", "G#", "D#", "A#", "F"];
+        const mejour_key_midi_tones = [60, 55, 62, 57, 64, 59, 54, 61, 56, 63, 58, 65];
+        const minor_key_array = ["A", "E", "B", "F♯", "C♯", "G♯", "D♯", "Ab", "Eb", "Bb", "F", "C"];
+        const key_positions = [];
+
+        const chords = {
+            "maj": [0, 4, 7],
+            "m": [0, 3, 7],
+            "dim": [0, 3, 6],
+            "aug": [0, 4, 8],
+            "7": [0, 4, 7, 10],
+            "Maj7": [0, 4, 7, 11],
+            "m7": [0, 3, 7, 10],
+            "m7b5": [0, 3, 6, 10],
+            "7b5": [0, 4, 6, 10],
+            "7sus4": [0, 5, 7, 10],
+            "7sus2": [0, 2, 7, 10],
+            "9": [0, 4, 7, 10, 14],
+            "11": [0, 4, 7, 10, 14, 17],
+            "13": [0, 4, 7, 10, 14, 17, 21],
+            "7b9": [0, 4, 7, 10, 13],
+            "7#9": [0, 4, 7, 10, 15],
+            "7b5b9": [0, 4, 6, 10, 13],
+            "7b5": [0, 4, 6, 10],
+            "7#5": [0, 4, 8, 10],
+            "7#5b9": [0, 4, 8, 10, 13],
+            "7#5b13": [0, 4, 8, 10, 21],
+            "7#5b9b13": [0, 4, 8, 10, 13, 21],
+            "7#9b13": [0, 4, 7, 10, 15, 21],
+            "7#9b5": [0, 4, 6, 10, 15],
+            "7#9b5b13": [0, 4, 6, 10, 15, 21],
+            "7#9sus4": [0, 5, 7, 10, 15],
+            "7#9sus2": [0, 2, 7, 10, 15],
+            "7#9sus4b5": [0, 5, 6, 10, 15],
+            "7#9sus2b5": [0, 2, 6, 10, 15],
+            "7#9sus4b13": [0, 5, 7, 10, 15, 21],
+            "7#9sus2b13": [0, 2, 7, 10, 15, 21],
+            "7#9sus4b5b13": [0, 5, 6, 10, 15, 21],
         }
 
-        let mejour_key_array = ["C", "G", "D", "A", "E", "B", "F♯", "Cb", "Gb", "Db", "Ab", "Eb"]
-        let mejour_key_tones = ["C", "G", "D", "A", "E", "B", "F#", "B", "F#", "C#", "G#", "D#"]
-        let minor_key_array = ["A", "E", "B", "F♯", "C♯", "G♯", "D♯", "Ab", "Eb", "Bb", "F", "C"]
-        let now_keys = []
-        let key_positions = []
-
+        // Calculate key positions for the circle
         for (let i = 0; i < 12; i++) {
             key_positions.push({
                 x: Math.cos((i * 30 - 90) / (180 / Math.PI)) * 150 + 150,
                 y: Math.sin((i * 30 - 90) / (180 / Math.PI)) * 150 + 150
-            })
+            });
         }
 
+        function chord_judge(keys = []) {
+            let chord;
+            keys.sort();
+            const root = keys[0];
+            const root_key = Tone.Frequency(root, "midi").toNote().slice(0, -1);
+            let chord_pattern = keys.map((key) => {
+                return key - root;
+            });
+            for (const [key, value] of Object.entries(chords)) {
+                if (JSON.stringify(value) === JSON.stringify(chord_pattern)) {
+                    chord = key;
+                    break;
+                }
+            }
+            return chord;
+        }
+
+        // p5.js setup function
         function setup() {
             const canvas = createCanvas(300, 300);
             canvas.parent(document.querySelector('.display'));
         }
 
+        // p5.js draw function
         function draw() {
             clear();
-            now_keys.forEach((key, i) => {
-                now_keys.forEach((key, j) => {
-                    if (i != j) {
-                        stroke(255)
-                        strokeWeight(1)
-                        line(key_positions[now_keys[i]].x, key_positions[now_keys[i]].y, key_positions[now_keys[j]].x, key_positions[now_keys[j]].y)
+            noFill();
+            stroke(102);
+            /*
+            let waveform = analyser.getValue();
+            let resolution = 4;
+            beginShape();
+            for (let i = 0; i < waveform.length; i += resolution) {
+                let avg = 0;
+                for (let j = 0; j < resolution; j++) {
+                    avg += waveform[i + j] || 0;
+                }
+                avg /= resolution;
+
+                let x = map(i, 0, waveform.length, 0, width);
+                let y = map(avg * 0.6, -1, 1, height, 0); // 60%に縮小
+                vertex(x, y);
+            }
+            endShape();
+                        */
+            playing.all_keys().forEach((key1, i) => {
+                playing.all_keys().forEach((key2, j) => {
+                    if (i !== j) {
+                        let tone_key1 = Tone.Frequency(key1, "midi").toNote().slice(0, -1)
+                        let tone_key2 = Tone.Frequency(key2, "midi").toNote().slice(0, -1)
+                        let key1_index = mejour_key_tones.indexOf(tone_key1);
+                        let key2_index = mejour_key_tones.indexOf(tone_key2);
+
+                        stroke(215);
+                        strokeWeight(2);
+                        line(
+                            key_positions[key1_index].x,
+                            key_positions[key1_index].y,
+                            key_positions[key2_index].x,
+                            key_positions[key2_index].y
+                        );
                     }
-                })
-            })
-        }
-
-        class Key {
-            constructor(key) {
-                this.key = key
-                this.now_keys = [0 + this.key, 1 + this.key, 4 + this.key]
-                this.now_keys.forEach((key, i) => {
-                    if (key > 11) {
-                        this.now_keys[i] = key - 12
-                    }
-                })
-                now_keys = this.now_keys
-            }
-            majour() {
-                monoSynth.triggerAttackRelease(this.now_keys.map((key) => {
-                    return mejour_key_tones[key] + "4"
-                }), "8n")
-            }
-            clear() {
-                now_keys = []
-            }
-        }
-
-        $(document).on("pointerdown", "button.key", function () {
-            new Key($("button.key").index(this)).majour()
-        })
-        $(document).on("pointerup", "button.key", function () {
-            new Key().clear()
-        })
-
-        function set_keys() {
-            for (let i = 0; i < 12; i++) {
-                let $key = $(`<button class="key"><p>${mejour_key_array[i]}</p><p class="sub">${minor_key_array[i]}<p></button>`).appendTo(".keys")
-            }
-            $("button.key").each(function (index) {
-                $(this).css({
-                    transform: `rotate(${(index * 30)}deg)`,
                 });
-            })
-        }
-
-        function set_section(name) {
-            $("section").removeClass("active")
-            $(`section.${name}`).addClass("active")
-        }
-
-        function set_text_curve(dir, content) {
-            let d = -(dir - 6)
-            let $typo = $(`<button class="curve-text">${content}</button>`).appendTo(".menu")
-            let typo_height = $typo.height()
-            $typo.arctext({ radius: 140 - (typo_height / 2), dir: 1 })
-            $typo.css({
-                top: Math.cos((d * 30) / (180 / Math.PI)) * (150 - typo_height) + 150 + "px",
-                left: Math.sin((d * 30) / (180 / Math.PI)) * (150 - typo_height) + 150 + "px",
-                transform: `rotate(${-(d * 30 - 180)}deg) translateX(-50%) translateY(-50%) `,
             });
         }
 
-        set_keys()
+        // Key class to handle key-related logic
+        class Key {
+            constructor(key) {
+                this.key = key;
+            }
+            async attack() {
+                await Tone.start();
+                monoSynth.triggerAttack(Tone.Frequency(this.key, "midi").toFrequency(),Tone.now(), 0.5);
+            }
+            async release() {
+                monoSynth.triggerRelease(Tone.Frequency(this.key, "midi").toFrequency(),Tone.now(), 0.5);
+            }
+        }
 
-        set_text_curve(0, "Compose")
-        set_text_curve(3, "Saved")
-        set_text_curve(6, "Setting")
-        set_text_curve(9, "content")
+        class Chord {
+            constructor(key, chord_type) {
+                this.key = key;
+                this.now_keys = [];
+                chords[chord_type].forEach((key) => {
+                    this.now_keys.push(this.key + key);
+                });
+            }
+            attack() {
+                this.now_keys.forEach((key) => {
+                    new Key(key).attack();
+                });
+            }
+            release() {
+                this.now_keys.forEach((key) => {
+                    new Key(key).release();
+                });
+                this.now_keys = [];
+            }
+        }
+        let playing = {
+            chord: {
+                now_keys: [],
+            },
+            keys: [],
+            all_keys: () => playing.keys.map((k) => { return k.key }).concat(playing.chord.now_keys),
+        }
+        $(document).on("pointerdown", "button.key", function () {
+            if (playing.chord.now_keys.length === 0) {
+                playing.chord = new Chord(Number($(this).attr("midi")), "maj");
+                playing.chord.attack();
+            } else {
+                if (playing.all_keys().includes(Number($(this).attr("midi")))=== false) {
+                    if (Math.max(...playing.all_keys()) > Number($(this).attr("midi"))) {
+                        playing.keys.push(new Key(Number($(this).attr("midi")) + 12));
+                    } else {
+                        playing.keys.push(new Key(Number($(this).attr("midi"))));
+                    }
+                    playing.keys[playing.keys.length - 1].attack();
+                }
+            }
+            console.log(chord_judge(playing.all_keys()));
+        });
+
+        $(document).on("pointerup", "button.key", function () {
+            playing.chord.release();
+
+        });
+
+        // Function to set up key buttons
+        function set_keys() {
+            for (let i = 0; i < 12; i++) {
+                const $key = $(`<button class="key" midi="${mejour_key_midi_tones[i]}">
+                    <p>${mejour_key_array[i]}</p>
+                    <p class="sub">${minor_key_array[i]}</p>
+                </button>`).appendTo(".keys");
+            }
+
+            $("button.key").each(function (index) {
+                $(this).css({
+                    transform: `rotate(${index * 30}deg)`,
+                });
+            });
+        }
+
+        // Function to activate a section
+        function set_section(name) {
+            $("section").removeClass("active");
+            $(`section.${name}`).addClass("active");
+        }
+
+        // Function to create curved text
+        function set_text_curve(dir, content) {
+            const d = -(dir - 6);
+            const $typo = $(`<button class="curve-text">${content}</button>`).appendTo(".menu");
+            const typo_height = $typo.height();
+
+            $typo.arctext({ radius: 140 - (typo_height / 2), dir: 1 });
+            $typo.css({
+                top: Math.cos((d * 30) / (180 / Math.PI)) * (150 - typo_height) + 150 + "px",
+                left: Math.sin((d * 30) / (180 / Math.PI)) * (150 - typo_height) + 150 + "px",
+                transform: `rotate(${-(d * 30 - 180)}deg) translateX(-50%) translateY(-50%)`,
+            });
+        }
+
+        // Initialize the application
+        set_keys();
+        set_text_curve(0, "Compose");
+        set_text_curve(3, "Saved");
+        set_text_curve(6, "Setting");
+        set_text_curve(9, "Content");
     </script>
 </body>
 
