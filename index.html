@@ -54,6 +54,11 @@
             "m7": [0, 3, 7, 10],
             "m7b5": [0, 3, 6, 10],
             "7b5": [0, 4, 6, 10],
+            "6": [0, 4, 7, 9],
+            "m6": [0, 3, 7, 9],
+            "add9": [0, 2, 4, 7],
+            "sus4": [0, 5, 7],
+            "sus2": [0, 2, 7],
             "7sus4": [0, 5, 7, 10],
             "7sus2": [0, 2, 7, 10],
             "9": [0, 4, 7, 10, 14],
@@ -131,7 +136,7 @@
                 vertex(x, y);
             }
             endShape();
-                        */
+            */
             playing.all_keys().forEach((key1, i) => {
                 playing.all_keys().forEach((key2, j) => {
                     if (i !== j) {
@@ -158,12 +163,11 @@
             constructor(key) {
                 this.key = key;
             }
-            async attack() {
-                await Tone.start();
-                monoSynth.triggerAttack(Tone.Frequency(this.key, "midi").toFrequency(),Tone.now(), 0.5);
+            attack() {
+                monoSynth.triggerAttack(Tone.Frequency(this.key, "midi").toFrequency(), Tone.now(), 0.5);
             }
-            async release() {
-                monoSynth.triggerRelease(Tone.Frequency(this.key, "midi").toFrequency(),Tone.now(), 0.5);
+            release() {
+                monoSynth.triggerRelease(Tone.Frequency(this.key, "midi").toFrequency(), Tone.now(), 0.5);
             }
         }
 
@@ -193,13 +197,20 @@
             },
             keys: [],
             all_keys: () => playing.keys.map((k) => { return k.key }).concat(playing.chord.now_keys),
+            chord_root: () => {
+                if (playing.all_keys().length > 0) {
+                    return Tone.Frequency(playing.all_keys()[0], "midi").toNote().slice(0, -1);
+                } else {
+                    return null;
+                }
+            },
         }
         $(document).on("pointerdown", "button.key", function () {
-            if (playing.chord.now_keys.length === 0) {
+            if (playing.all_keys().length === 0) {
                 playing.chord = new Chord(Number($(this).attr("midi")), "maj");
                 playing.chord.attack();
             } else {
-                if (playing.all_keys().includes(Number($(this).attr("midi")))=== false) {
+                if (playing.all_keys().includes(Number($(this).attr("midi"))) === false) {
                     if (Math.max(...playing.all_keys()) > Number($(this).attr("midi"))) {
                         playing.keys.push(new Key(Number($(this).attr("midi")) + 12));
                     } else {
@@ -208,12 +219,35 @@
                     playing.keys[playing.keys.length - 1].attack();
                 }
             }
-            console.log(chord_judge(playing.all_keys()));
+            console.log(playing.all_keys());
         });
+
+        $(document).on("keypress",function (e) {
+            console.log(e.key);
+            let midi_tone = mejour_key_midi_tones[Number(e.key)]
+            if (playing.all_keys().length === 0) {
+                playing.chord = new Chord(midi_tone, "maj");
+                playing.chord.attack();
+            } else {
+                if (playing.all_keys().includes(midi_tone) === false) {
+                    if (Math.max(...playing.all_keys()) > midi_tone) {
+                        playing.keys.push(new Key(midi_tone) + 12);
+                    } else {
+                        playing.keys.push(new Key(midi_tone));
+                    }
+                    console.log(playing.keys[playing.keys.length - 1])
+                    playing.keys[playing.keys.length - 1].attack();
+                }
+            }
+        });
+
+        $(document).on("keyup", function () {
+            playing.chord.release();
+        });
+
 
         $(document).on("pointerup", "button.key", function () {
             playing.chord.release();
-
         });
 
         // Function to set up key buttons
@@ -225,7 +259,7 @@
                 </button>`).appendTo(".keys");
             }
 
-            $("button.key").each(function (index) {
+            $("button.key").each(function (index) {4
                 $(this).css({
                     transform: `rotate(${index * 30}deg)`,
                 });
