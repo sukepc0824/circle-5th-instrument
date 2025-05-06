@@ -5,27 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <script src="https://unpkg.com/@ungap/custom-elements-builtin"></script>
+    <script type="module" src="https://unpkg.com/x-frame-bypass"></script>
 </head>
 
 <body>
-    <button onclick="       new Key(45).attack();
-        new Key(66).attack();"></button>
-    <script>
-        let monoSynth = new Tone.PolySynth().toDestination();;
-
-        class Key {
-            constructor(key) {
-                this.key = key;
-            }
-            async attack() {
-                await Tone.start();
-                monoSynth.triggerAttack(Tone.Frequency(this.key, "midi").toNote());
-            }
-        }
-
-
-    </script>
+    <iframe is="x-frame-bypass" src="https://news.ycombinator.com"></iframe>
 </body>
 
 </html>
