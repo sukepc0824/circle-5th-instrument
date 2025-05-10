@@ -208,23 +208,27 @@
             },
         }
         $(document).on("pointerdown", "button.key", function () {
+            let index = $("button.key").index(this);
+            if (keyPressed[index]) return;
+            keyPressed[index] = true;
+            console.log(playing)
+            let midi_tone = mejour_key_midi_tones[Number(index)]
             if (playing.all_keys().length === 0) {
-                playing.chord = new Chord(Number($(this).attr("midi")), "maj");
+                playing.chord = new Chord(midi_tone, "maj");
                 playing.chord.attack();
             } else {
-                if (playing.all_keys().includes(Number($(this).attr("midi"))) === false) {
-                    if (Math.max(...playing.all_keys()) > Number($(this).attr("midi"))) {
-                        playing.keys.push(new Key(Number($(this).attr("midi")) + 12));
+                if (playing.all_keys().includes(midi_tone) === false) {
+                    if (Math.max(...playing.all_keys()) > midi_tone) {
+                        playing.keys.push(new Key(midi_tone + 12));
                     } else {
-                        playing.keys.push(new Key(Number($(this).attr("midi"))));
+                        playing.keys.push(new Key(midi_tone));
                     }
                     playing.keys[playing.keys.length - 1].attack();
                 }
             }
-            console.log(playing.all_keys());
         });
 
-        $(document).on("keydown",function (e) {
+        $(document).on("keydown", function (e) {
             if (keyPressed[e.key]) return;
             keyPressed[e.key] = true;
             console.log(playing)
@@ -235,7 +239,7 @@
             } else {
                 if (playing.all_keys().includes(midi_tone) === false) {
                     if (Math.max(...playing.all_keys()) > midi_tone) {
-                        playing.keys.push(new Key(midi_tone+ 12));
+                        playing.keys.push(new Key(midi_tone + 12));
                     } else {
                         playing.keys.push(new Key(midi_tone));
                     }
@@ -249,7 +253,7 @@
             playing.chord.release();
             playing.keys.forEach((el) => {
                 console.log(el.key, mejour_key_midi_tones[Number(e.key)])
-                if(el.note === mejour_key_tones[Number(e.key)]) {
+                if (el.note === mejour_key_tones[Number(e.key)]) {
                     el.release();
                     playing.keys.splice(playing.keys.indexOf(el), 1);
                 }
@@ -258,7 +262,16 @@
 
 
         $(document).on("pointerup", "button.key", function () {
+            let index = $("button.key").index(this);
+            keyPressed[index] = false;
             playing.chord.release();
+            playing.keys.forEach((el) => {
+                console.log(el.key, mejour_key_midi_tones[Number(index)])
+                if (el.note === mejour_key_tones[Number(index)]) {
+                    el.release();
+                    playing.keys.splice(playing.keys.indexOf(el), 1);
+                }
+            });
         });
 
         // Function to set up key buttons
@@ -270,7 +283,8 @@
                 </button>`).appendTo(".keys");
             }
 
-            $("button.key").each(function (index) {4
+            $("button.key").each(function (index) {
+                4
                 $(this).css({
                     transform: `rotate(${index * 30}deg)`,
                 });
